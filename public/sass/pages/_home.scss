@@ -1,0 +1,125 @@
+.section-about {
+  background-color: white;
+  background-image: url(../assets/img/about_bg.jpeg);
+  background-size: cover;
+  // background-position: center;
+  background-attachment:fixed;
+  //background-attachment:initial;
+  
+ // background-position: 15rem -25rem;
+  
+  padding: 15rem 0 15rem 0;
+  //height: 100vh;
+  @include respond(tab-port) {
+    background-position: -85rem -25rem;
+    background-image: none;
+  }
+  &-header{
+    padding-top: 30rem;
+    @include respond(tab-port) {
+      padding-top: 10rem;
+    }
+    @include respond(phone) {
+      padding-top: 10rem;
+    }
+  }
+  @include respond(tab-port) {
+    padding-top: 15rem;
+  }
+  @include respond(phone) {
+    padding-top: 7rem;
+  }
+  
+
+}
+
+.section-vision {
+  
+  padding: 10rem 0;
+  background-color: $color-black;
+  background-image: url(../assets/img/black-bg-3.png);
+  // background-image: linear-gradient(
+  //     to right bottom,
+  //     rgba($color-primary-darker, 0.6),
+  //     rgba($color-primary-lighter, 0.6)
+  //   ),
+  //   url(../assets/gallery/19-Kraken.jpg);
+  background-size: cover;
+
+  @include respond(tab-port) {
+    background-image: url(../assets/img/black-bg-4.jpeg);
+  }
+  @include respond(phone) {
+    background-image: url(../assets/img/black-bg-4.jpeg);
+  }
+ 
+}
+
+.section-slider {
+  //height: 90vh;
+  background-color: white;
+  //background-image: url(../assets/img/photo-1.jpeg);
+  //background-image: url(../assets/img/orta.png);
+  background-size: cover;
+  background-position: center;
+  background-attachment:fixed;
+  padding: 10rem 0;
+
+}
+
+.section-roadmap {
+  padding: 15rem 0 15rem 0;
+  background-color: $color-black;
+  background-image: url(../assets/img/sol_el.jpeg);
+  background-size: cover;
+  background-attachment: fixed;
+  //background-image: url(../assets/img/bg2.png);
+  
+  // background-image: linear-gradient(
+  //     to right bottom,
+  //     rgba($color-primary-darker, 0.6),
+  //     rgba($color-primary-lighter, 0.6)
+  //   );
+  @include respond(tab-port) {
+    padding: 10rem 0;
+    background-image: none;
+    background-color: white;
+  }
+}
+
+.section-team {
+  background-image: url(../assets/img/black-bg-2.jpeg);
+  //background-position: -300rem -15rem;
+  background-size:cover;
+  background-position: center;
+  //background-attachment:fixed;
+  //background-repeat:no-repeat;
+  padding: 10rem 0;
+  &-person {
+    padding: 0 15vw;
+
+    color: black;
+  }
+
+  @include respond(tab-port) {
+    padding: 8rem 0;
+    //background-position: -400rem -60rem;
+  }
+}
+.section-faq {
+  padding: 15rem 0 15rem 0;
+  //background-color: $color-black;
+  background-image: url(../assets/img/desen.png);
+  background-size: cover;
+  background-attachment: fixed;
+  //background-image: url(../assets/img/bg2.png);
+  
+  // background-image: linear-gradient(
+  //     to right bottom,
+  //     rgba($color-primary-darker, 0.6),
+  //     rgba($color-primary-lighter, 0.6)
+  //   );
+  @include respond(tab-port) {
+    padding: 10rem 0;
+  }
+}

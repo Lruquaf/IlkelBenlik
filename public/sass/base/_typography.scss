@@ -1,0 +1,105 @@
+
+
+// @font-face {
+//   font-family: MVBoli;
+//   src: url(../../assets/fonts/mvboli.ttf);
+// }
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  line-height: 1.7;
+  color: $color-dark-grey;
+}
+
+.heading-primary {
+  color: $color-white;
+  text-transform: uppercase;
+  backface-visibility: hidden;
+  margin-bottom: 6rem;
+
+  &-main {
+    display: block;
+    font-size: 6rem;
+    font-weight: 400;
+    letter-spacing: 3.5rem;
+    font-family: trajan-pro-3, serif;
+    animation: moveInLeft 1s ease-out;
+
+    @include respond(phone) {
+      letter-spacing: 1rem;
+      font-size: 5rem;
+    }
+  }
+
+  &-sub {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 2.8rem;
+    animation: moveInRight 1s ease-out;
+
+    @include respond(phone) {
+      letter-spacing: 1rem;
+    }
+  }
+}
+
+.heading-secondary {
+  font-size: 3.2rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  display: inline-block;
+  
+  
+  color: black;
+  letter-spacing: 0.2rem;
+  transition: all 0.2s;
+  z-index: 10;
+
+  @include respond(tab-port) {
+    font-size: 3rem;
+  }
+
+  @include respond(phone) {
+    font-size: 2rem;
+  }
+
+  &:hover {
+    transform: skewX(15deg) skewY(2deg) scale(1.1);
+    text-shadow: 0.5rem 1rem 2rem rgba($color-black, 0.2);
+  }
+}
+
+.heading-tertiary {
+  font-size: $default-font-size;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.header-white {
+  color: $color-white;
+}
+.header-black {
+  color: $color-black;
+}
+
+.paragraph {
+  font-size: $default-font-size;
+  color: $color-black;
+
+  &:not(:last-child) {
+    margin-bottom: 3rem;
+  }
+}
+
+.paragraph-white {
+  color: $color-white;
+}
+
+.paragraph-small {
+  font-size: $small-font-size;
+}
+.ital {
+  font-style: italic;
+}
