@@ -279,26 +279,26 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
         address _to,
         uint256 _amount
     ) public onlyOwner {
-        if (state != STATE.WHITELIST) {
-            revert NotWhitelistSalePhase();
-        } else if (
-            totalSupply() + _amount >
-            MAX_TOKENS_FOR_WHITELIST + MAX_TOKENS_FOR_AIRDROP
-        ) {
-            revert MaxSupplyForWhitelistExceeded();
-        } else if (
-            uint256(getWhitelistMintCounter(_to)) + _amount >
-            MAX_AMOUNT_PER_WHITELIST
-        ) {
-            revert MaxAmountPerWhitelistExceeded();
-        }
-        _setWhitelistMintCounter(
-            _to,
-            getWhitelistMintCounter(msg.sender) + uint32(_amount)
-        );
         if (_to == address(0)) {
             _mint(owner(), _amount);
         } else {
+            if (state != STATE.WHITELIST) {
+                revert NotWhitelistSalePhase();
+            } else if (
+                totalSupply() + _amount >
+                MAX_TOKENS_FOR_WHITELIST + MAX_TOKENS_FOR_AIRDROP
+            ) {
+                revert MaxSupplyForWhitelistExceeded();
+            } else if (
+                uint256(getWhitelistMintCounter(_to)) + _amount >
+                MAX_AMOUNT_PER_WHITELIST
+            ) {
+                revert MaxAmountPerWhitelistExceeded();
+            }
+            _setWhitelistMintCounter(
+                _to,
+                getWhitelistMintCounter(_to) + uint32(_amount)
+            );
             _mint(_to, _amount);
         }
     }
@@ -312,20 +312,20 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
         address _to,
         uint256 _amount
     ) public onlyOwner {
-        if (state != STATE.PUBLIC) {
-            revert NotPublicSalePhase();
-        } else if (_amount > MAX_AMOUNT_PER_MINT) {
-            revert MaxAmountPerMintExceeded();
-        } else if (totalSupply() + _amount > MAX_TOKENS) {
-            revert MaxSupplyExceeded();
-        } else if (
-            getPublicMintCounter(_to) + _amount > MAX_AMOUNT_PER_ACCOUNT
-        ) {
-            revert MaxAmountPerAccountExceeded();
-        }
         if (_to == address(0)) {
             _mint(owner(), _amount);
         } else {
+            if (state != STATE.PUBLIC) {
+                revert NotPublicSalePhase();
+            } else if (_amount > MAX_AMOUNT_PER_MINT) {
+                revert MaxAmountPerMintExceeded();
+            } else if (totalSupply() + _amount > MAX_TOKENS) {
+                revert MaxSupplyExceeded();
+            } else if (
+                getPublicMintCounter(_to) + _amount > MAX_AMOUNT_PER_ACCOUNT
+            ) {
+                revert MaxAmountPerAccountExceeded();
+            }
             _mint(_to, _amount);
         }
     }
