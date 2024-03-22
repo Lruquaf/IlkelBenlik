@@ -10,10 +10,10 @@ async function main() {
     let uri = await contract.tokenURI("1")
     console.log(`Previous URI: ${uri.toString()}`)
 
-    txResponse = await contract.reveal(baseUri)
-    await txResponse.wait(1)
+    // txResponse = await contract.reveal(baseUri)
+    // await txResponse.wait(1)
 
-    uri = await contract.tokenURI("1")
+    uri = await contract.tokenURI("6")
     console.log(`Current URI: ${uri.toString()}`)
 }
 

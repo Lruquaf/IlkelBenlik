@@ -9,7 +9,7 @@ async function main() {
     const previousState = await contract.currentState()
     console.log(`Previous state: ${previousState}`)
 
-    const newState = networkConfig[chainId].state["whitelist"] // closed, whitelist, public
+    const newState = networkConfig[chainId].state["public"] // closed, whitelist, public
     txResponse = await contract.changeState(newState)
     await txResponse.wait(1)
     const currentState = await contract.currentState()
