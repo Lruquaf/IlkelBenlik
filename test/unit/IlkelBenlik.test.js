@@ -6,7 +6,7 @@ const {
 const {assert, expect} = require("chai")
 const {merkle} = require("../../utils/merkle")
 
-!developmentChains.includes(network.name) ? describe.skip :
+// !developmentChains.includes(network.name) ? describe.skip :
 describe("IlkelBenlik", async function () {
     let ilkelBenlik,
         transferProxyMock,
@@ -16,7 +16,7 @@ describe("IlkelBenlik", async function () {
         wl2ConnectedContract,
         user1ConnectedContract
     let provider
-    let deployer, attacker, wl1, wl2, user1, communityWallet
+    let deployer, attacker, wl1, wl2, user1, communityWallet, zeroAddress
     let chainId
     let closedState, whitelistState, publicState
     let publicTokenPrice, baseUri, founder2
@@ -33,6 +33,7 @@ describe("IlkelBenlik", async function () {
             (await getNamedAccounts()).wl1,
             (await getNamedAccounts()).wl2,
         ]
+        zeroAddress = ethers.constants.AddressZero
         provider = new ethers.providers.Web3Provider(network.provider)
         await deployments.fixture(["all"])
         ilkelBenlik = await ethers.getContract("IlkelBenlik", deployer)
@@ -509,6 +510,289 @@ describe("IlkelBenlik", async function () {
             )
             assert.equal(
                 (await ilkelBenlik.getPublicMintCounter(deployer)).toString(),
+                amount
+            )
+        })
+    })
+    describe("externalWhitelistMint", async function () {
+        beforeEach(async function () {
+            let amount = "4"
+            let txResponse = await ilkelBenlik.airdropMint(deployer, amount)
+            await txResponse.wait(1)
+            amount = "3"
+            txResponse = await ilkelBenlik.airdropMint(wl1, amount)
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.airdropMint(user1, amount)
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.changeState(whitelistState)
+            await txResponse.wait(1)
+        })
+        it("fails if state is 'closed'", async function () {
+            const txResponse = await ilkelBenlik.changeState(closedState)
+            await txResponse.wait(1)
+            const amount = "1"
+            await expect(
+                ilkelBenlik.externalWhitelistSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "NotWhitelistSalePhase"
+            )
+        })
+        it("fails if state is 'public'", async function () {
+            const txResponse = await ilkelBenlik.changeState(publicState)
+            await txResponse.wait(1)
+            const amount = "1"
+            await expect(
+                ilkelBenlik.externalWhitelistSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "NotWhitelistSalePhase"
+            )
+        })
+        it("fails if caller is not owner", async function () {
+            const amount = "10"
+            await expect(
+                attackerConnectedContract.externalWhitelistSaleMint(
+                    deployer,
+                    amount
+                )
+            ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+        it("fails if max supply for whitelist is exceeded", async function () {
+            let txResponse = await ilkelBenlik.changeState(closedState)
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.changeState(whitelistState)
+            await txResponse.wait(1)
+            // deployer minted 2, wl1 minted 2, wl2 try to mint 2 as external
+            const amount = "20"
+            let proof = await merkle(deployer)
+            txResponse = await ilkelBenlik.whitelistSaleMint(amount, proof, {
+                value: (amount * whitelistTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            proof = await merkle(wl1)
+            txResponse = await wl1ConnectedContract.whitelistSaleMint(
+                amount,
+                proof,
+                {
+                    value: (amount * whitelistTokenPrice).toString(),
+                }
+            )
+            await txResponse.wait(1)
+            await expect(
+                ilkelBenlik.externalWhitelistSaleMint(wl2, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "MaxSupplyForWhitelistExceeded"
+            )
+        })
+        it("fails if max token amount per whitelist is exceeded", async function () {
+            let amount = "10"
+            let proof = await merkle(wl1)
+            const txResponse = await wl1ConnectedContract.whitelistSaleMint(
+                amount,
+                proof,
+                {
+                    value: (amount * whitelistTokenPrice).toString(),
+                }
+            )
+            await txResponse.wait(1)
+            amount = "20"
+            await expect(
+                ilkelBenlik.externalWhitelistSaleMint(wl1, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "MaxAmountPerWhitelistExceeded"
+            )
+        })
+        it("mints the correct amount of tokens to the caller", async function () {
+            const amount1 = "20"
+            let txResponse = await ilkelBenlik.externalWhitelistSaleMint(
+                wl1,
+                amount1
+            )
+            await txResponse.wait(1)
+            const amount2 = "10"
+            txResponse = await ilkelBenlik.externalWhitelistSaleMint(
+                zeroAddress,
+                amount2
+            )
+            await txResponse.wait(1)
+            // Ideally should be 1 assert per "it"
+            assert.equal(
+                (await ilkelBenlik.balanceOf(wl1)).toString(),
+                (parseInt(amount1) + 3).toString()
+            )
+            assert.equal(
+                (await ilkelBenlik.balanceOf(deployer)).toString(),
+                parseInt(amount2) + 4
+            )
+            assert.equal(
+                (await ilkelBenlik.totalSupply()).toString(),
+                (
+                    parseInt(amount1, 10) +
+                    parseInt(amount2, 10) +
+                    parseInt(await ilkelBenlik.MAX_TOKENS_FOR_AIRDROP(), 10)
+                ).toString()
+            )
+            assert.equal(
+                (await ilkelBenlik.getWhitelistMintCounter(wl1)).toString(),
+                amount1
+            )
+        })
+    })
+    describe("externalPublicMint", async function () {
+        beforeEach(async function () {
+            let amount = "4"
+            let txResponse = await ilkelBenlik.airdropMint(deployer, amount)
+            await txResponse.wait(1)
+            amount = "3"
+            txResponse = await ilkelBenlik.airdropMint(wl1, amount)
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.airdropMint(user1, amount)
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.changeState(whitelistState)
+            await txResponse.wait(1)
+            amount = "20"
+            let proof = await merkle(wl1)
+            txResponse = await wl1ConnectedContract.whitelistSaleMint(
+                amount,
+                proof,
+                {
+                    value: (amount * whitelistTokenPrice).toString(),
+                }
+            )
+            await txResponse.wait(1)
+            proof = await merkle(wl2)
+            txResponse = await wl2ConnectedContract.whitelistSaleMint(
+                amount,
+                proof,
+                {
+                    value: (amount * whitelistTokenPrice).toString(),
+                }
+            )
+            await txResponse.wait(1)
+            txResponse = await ilkelBenlik.changeState(publicState)
+            await txResponse.wait(1)
+        })
+        it("fails if the state is 'closed'", async function () {
+            let txResponse = await ilkelBenlik.changeState(closedState)
+            await txResponse.wait(1)
+            const amount = "30"
+            await expect(
+                ilkelBenlik.externalPublicSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(ilkelBenlik, "NotPublicSalePhase")
+        })
+        it("fails if the state is 'whitelist'", async function () {
+            let txResponse = await ilkelBenlik.changeState(whitelistState)
+            await txResponse.wait(1)
+            const amount = "30"
+            await expect(
+                ilkelBenlik.externalPublicSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(ilkelBenlik, "NotPublicSalePhase")
+        })
+        it("fails if caller is not owner", async function () {
+            const amount = "10"
+            await expect(
+                attackerConnectedContract.externalPublicSaleMint(
+                    zeroAddress,
+                    amount
+                )
+            ).to.be.revertedWith("Ownable: caller is not the owner")
+        })
+        it("fails if request exceeds max amount per transaction", async function () {
+            const amount = "40"
+            await expect(
+                ilkelBenlik.externalPublicSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "MaxAmountPerMintExceeded"
+            )
+        })
+        it("fails if max supply is exceeded", async function () {
+            // w1 and wl2 have already minted 20 tokens each from whitelist sale. deployer, wl1 and wl2 mints 30 + 20 tokens; user1 tries to mint 20 tokens as external.
+            let amount = "30"
+            let txResponse = await ilkelBenlik.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            txResponse = await wl1ConnectedContract.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            txResponse = await wl2ConnectedContract.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            amount = "20"
+            txResponse = await ilkelBenlik.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            txResponse = await wl1ConnectedContract.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            txResponse = await wl2ConnectedContract.publicSaleMint(amount, {
+                value: (amount * publicTokenPrice).toString(),
+            })
+            await txResponse.wait(1)
+            await expect(
+                ilkelBenlik.externalPublicSaleMint(zeroAddress, amount)
+            ).to.be.revertedWithCustomError(ilkelBenlik, "MaxSupplyExceeded")
+        })
+        it("fails if max token amount per address is exceeded", async function () {
+            const amount = "30"
+            const txResponse = await user1ConnectedContract.publicSaleMint(
+                amount,
+                {
+                    value: (amount * publicTokenPrice).toString(),
+                }
+            )
+            await txResponse.wait(1)
+            await expect(
+                ilkelBenlik.externalPublicSaleMint(user1, amount)
+            ).to.be.revertedWithCustomError(
+                ilkelBenlik,
+                "MaxAmountPerAccountExceeded"
+            )
+        })
+        it("mints the correct amount of tokens to the caller", async function () {
+            const startingTokenBalance = await ilkelBenlik.balanceOf(deployer)
+            const startingContractBalance = await ilkelBenlik.contractBalance()
+            const amount = "30"
+            let txResponse = await ilkelBenlik.externalPublicSaleMint(
+                zeroAddress,
+                amount
+            )
+            await txResponse.wait(1)
+            const endingTokenBalance = await ilkelBenlik.balanceOf(deployer)
+            const endingContractBalance = await ilkelBenlik.contractBalance()
+
+            const startingUser1Balance = await ilkelBenlik.balanceOf(user1)
+            txResponse = await ilkelBenlik.externalPublicSaleMint(user1, amount)
+            await txResponse.wait(1)
+            const endingUser1Balance = await ilkelBenlik.balanceOf(user1)
+            // Ideally should be 1 assert per "it"
+            assert.equal(
+                endingTokenBalance.toString(),
+                (
+                    parseInt(startingTokenBalance, 10) + parseInt(amount, 10)
+                ).toString()
+            )
+            assert.equal(
+                (await ilkelBenlik.getPublicMintCounter(deployer)).toString(),
+                amount
+            )
+
+            assert.equal(
+                endingUser1Balance.toString(),
+                (
+                    parseInt(startingUser1Balance, 10) + parseInt(amount, 10)
+                ).toString()
+            )
+            assert.equal(
+                (await ilkelBenlik.getPublicMintCounter(user1)).toString(),
                 amount
             )
         })
