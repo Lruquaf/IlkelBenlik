@@ -23,8 +23,8 @@ const networkConfig = {
             "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", // wl2
         ],
     },
-    5: {
-        name: "goerli",
+    11155111: {
+        name: "sepolia",
         maxTokens: "45",
         maxTokensForWhitelist: "8",
         maxTokensForAirdrop: "5",

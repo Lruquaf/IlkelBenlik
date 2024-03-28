@@ -9,7 +9,7 @@ const TEST_KEY_2 = process.env.TEST_KEY_2 || "0xkey"
 const TEST_KEY_3 = process.env.TEST_KEY_3 || "0xkey"
 const TEST_KEY_4 = process.env.TEST_KEY_4 || "0xkey"
 const TEST_KEY_5 = process.env.TEST_KEY_5 || "0xkey"
-const GOERLI_RPC_URL = process.env.GOERLI_RPC_URL || "https://goerli"
+const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "https://sepolia"
 // const ETHEREUM_RPC_URL =
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "key"
 const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY || "key"
@@ -43,10 +43,10 @@ module.exports = {
             chainId: 31337,
             blockConfirmations: 1,
         },
-        goerli: {
-            chainId: 5,
+        sepolia: {
+            chainId: 11155111,
             blockConfirmations: 6,
-            url: GOERLI_RPC_URL,
+            url: SEPOLIA_RPC_URL,
             gasPrice: 35000000000,
             accounts: [
                 PRIVATE_KEY,
@@ -70,28 +70,28 @@ module.exports = {
     namedAccounts: {
         deployer: {
             default: 0,
-            goerli: 0,
+            sepolia: 0,
             mainnet: 0,
         },
         wl1: {
             default: 1,
-            goerli: 1,
+            sepolia: 1,
         },
         wl2: {
             default: 2,
-            goerli: 2,
+            sepolia: 2,
         },
         user1: {
             default: 3,
-            goerli: 3,
+            sepolia: 3,
         },
         user2: {
             default: 4,
-            goerli: 4,
+            sepolia: 4,
         },
         user3: {
             default: 5,
-            goerli: 5,
+            sepolia: 5,
         },
         founder1: {
             default: 11,
