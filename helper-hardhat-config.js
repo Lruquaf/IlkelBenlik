@@ -38,7 +38,7 @@ const networkConfig = {
         founder2: "0x8b162525d54853d5a5a9d7784BE568aE479F0c20",
         communityWallet: "0xCC7f39Ca6C9188eb88E8062d42461Dc7ec05041A",
         // "ipfs://bafybeifjjh7mrt2ec5xljc2yqp2favdyueb3ddygbl2xffnfhj4644qn24/"
-        baseUri: process.env.GOERLI_BASE_URI,
+        baseUri: process.env.SEPOLIA_BASE_URI,
         state: {
             closed: "0",
             whitelist: "1",
