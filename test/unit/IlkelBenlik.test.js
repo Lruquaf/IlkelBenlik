@@ -6,7 +6,7 @@ const {
 const {assert, expect} = require("chai")
 const {merkle} = require("../../utils/merkle")
 
-// !developmentChains.includes(network.name) ? describe.skip :
+!developmentChains.includes(network.name) ? describe.skip :
 describe("IlkelBenlik", async function () {
     let ilkelBenlik,
         transferProxyMock,

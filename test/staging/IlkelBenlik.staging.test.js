@@ -16,7 +16,7 @@ describe("IlkelBenlik", async function () {
         user3Connected
 
     let provider
-    let deployer, wl1, wl2, user1, user2, user3
+    let deployer, wl1, wl2, user1, user2, user3, zeroAddress
     let chainId
     let closedState, whitelistState, publicState
     let publicTokenPrice, whitelistTokenPrice, baseUri, communityWallet
@@ -29,6 +29,7 @@ describe("IlkelBenlik", async function () {
         user1 = (await getNamedAccounts()).user1
         user2 = (await getNamedAccounts()).user2
         user3 = (await getNamedAccounts()).user3
+        zeroAddress = ethers.constants.AddressZero
         provider = new ethers.providers.Web3Provider(network.provider)
         ilkelBenlik = await ethers.getContract("IlkelBenlik", deployer)
         wl1Connected = await ethers.getContract("IlkelBenlik", wl1)
@@ -73,7 +74,7 @@ describe("IlkelBenlik", async function () {
         })
         describe("whitelist-sale", async function () {
             it("mints the tokens to whitelist adresses", async function () {
-                const amount = "4"
+                const amount = "3"
                 const value = (amount * whitelistTokenPrice).toString()
                 let proof = await merkle(wl1)
                 let txResponse = await wl1Connected.whitelistSaleMint(
@@ -93,9 +94,20 @@ describe("IlkelBenlik", async function () {
                     }
                 )
                 await txResponse.wait(1)
+                txResponse = await ilkelBenlik.externalWhitelistSaleMint(wl1, "1")
+                await txResponse.wait(1)
+                txResponse = await ilkelBenlik.externalWhitelistSaleMint(
+                    zeroAddress,
+                    "1"
+                )
+                await txResponse.wait(1)
+                assert.equal(
+                    (await ilkelBenlik.balanceOf(deployer)).toString(),
+                    "6"
+                )
                 assert.equal(
                     (await ilkelBenlik.balanceOf(wl1)).toString(),
-                    amount
+                    parseInt(amount, 10) + 1
                 )
                 assert.equal(
                     (await ilkelBenlik.contractBalance()).toString(),
@@ -113,7 +125,10 @@ describe("IlkelBenlik", async function () {
         })
         describe("public-sale", async function () {
             it("mints the tokens to public addresses", async function () {
-                const amount = "4"
+                const startingDeployerBalance = await ilkelBenlik.balanceOf(
+                    deployer
+                )
+                const amount = "3"
                 const value = (amount * publicTokenPrice).toString()
                 let txResponse = await ilkelBenlik.publicSaleMint(amount, {
                     value: value,
@@ -155,6 +170,33 @@ describe("IlkelBenlik", async function () {
                     gasLimit: 500000,
                 })
                 await txResponse.wait(1)
+                txResponse = await ilkelBenlik.externalPublicSaleMint(
+                    zeroAddress,
+                    amount,
+                    {
+                        gasLimit: 500000,
+                    }
+                )
+                await txResponse.wait(1)
+                txResponse = await ilkelBenlik.externalPublicSaleMint(
+                    user3,
+                    amount,
+                    {
+                        gasLimit: 500000,
+                    }
+                )
+                await txResponse.wait(1)
+                txResponse = await ilkelBenlik.externalPublicSaleMint(
+                    zeroAddress,
+                    "2",
+                    {
+                        gasLimit: 500000,
+                    }
+                )
+                await txResponse.wait(1)
+                const endingDeployerBalance = await ilkelBenlik.balanceOf(
+                    deployer
+                )
                 assert.equal(
                     (await ilkelBenlik.balanceOf(user1)).toString(),
                     amount * 2
@@ -162,9 +204,17 @@ describe("IlkelBenlik", async function () {
                 assert.equal(
                     (await ilkelBenlik.contractBalance()).toString(),
                     (
-                        parseInt(whitelistTokenPrice, 10) * 8 +
+                        parseInt(whitelistTokenPrice, 10) * 6 +
                         parseInt(value, 10) * 8
                     ).toString()
+                )
+                assert.equal(
+                    (await ilkelBenlik.balanceOf(user3)).toString(),
+                    parseInt(amount, 10) * 3
+                )
+                assert.equal(
+                    endingDeployerBalance.toString(),
+                    (parseInt(startingDeployerBalance) + 11).toString()
                 )
             })
         })
