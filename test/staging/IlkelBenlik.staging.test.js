@@ -13,10 +13,11 @@ describe("IlkelBenlik", async function () {
         wl2Connected,
         user1Connected,
         user2Connected,
-        user3Connected
+        user3Connected,
+        admin1Connected
 
     let provider
-    let deployer, wl1, wl2, user1, user2, user3, zeroAddress
+    let deployer, wl1, wl2, user1, user2, user3, zeroAddress, admin1
     let chainId
     let closedState, whitelistState, publicState
     let publicTokenPrice, whitelistTokenPrice, baseUri, communityWallet
@@ -29,6 +30,7 @@ describe("IlkelBenlik", async function () {
         user1 = (await getNamedAccounts()).user1
         user2 = (await getNamedAccounts()).user2
         user3 = (await getNamedAccounts()).user3
+        admin1 = (await getNamedAccounts()).admin1
         zeroAddress = ethers.constants.AddressZero
         provider = new ethers.providers.Web3Provider(network.provider)
         ilkelBenlik = await ethers.getContract("IlkelBenlik", deployer)
@@ -37,6 +39,8 @@ describe("IlkelBenlik", async function () {
         user1Connected = await ethers.getContract("IlkelBenlik", user1)
         user2Connected = await ethers.getContract("IlkelBenlik", user2)
         user3Connected = await ethers.getContract("IlkelBenlik", user3)
+        admin1Connected = await ethers.getContract("IlkelBenlik", admin1)
+
         closedState = networkConfig[chainId].state["closed"]
         whitelistState = networkConfig[chainId].state["whitelist"]
         publicState = networkConfig[chainId].state["public"]
@@ -94,16 +98,19 @@ describe("IlkelBenlik", async function () {
                     }
                 )
                 await txResponse.wait(1)
-                txResponse = await ilkelBenlik.externalWhitelistSaleMint(wl1, "1")
+                txResponse = await admin1Connected.externalWhitelistSaleMint(
+                    wl1,
+                    "1"
+                )
                 await txResponse.wait(1)
-                txResponse = await ilkelBenlik.externalWhitelistSaleMint(
+                txResponse = await admin1Connected.externalWhitelistSaleMint(
                     zeroAddress,
                     "1"
                 )
                 await txResponse.wait(1)
                 assert.equal(
-                    (await ilkelBenlik.balanceOf(deployer)).toString(),
-                    "6"
+                    (await ilkelBenlik.balanceOf(admin1)).toString(),
+                    "1"
                 )
                 assert.equal(
                     (await ilkelBenlik.balanceOf(wl1)).toString(),
@@ -127,6 +134,9 @@ describe("IlkelBenlik", async function () {
             it("mints the tokens to public addresses", async function () {
                 const startingDeployerBalance = await ilkelBenlik.balanceOf(
                     deployer
+                )
+                const startingAdmin1Balance = await ilkelBenlik.balanceOf(
+                    admin1
                 )
                 const amount = "3"
                 const value = (amount * publicTokenPrice).toString()
@@ -178,7 +188,7 @@ describe("IlkelBenlik", async function () {
                     }
                 )
                 await txResponse.wait(1)
-                txResponse = await ilkelBenlik.externalPublicSaleMint(
+                txResponse = await admin1Connected.externalPublicSaleMint(
                     user3,
                     amount,
                     {
@@ -186,7 +196,7 @@ describe("IlkelBenlik", async function () {
                     }
                 )
                 await txResponse.wait(1)
-                txResponse = await ilkelBenlik.externalPublicSaleMint(
+                txResponse = await admin1Connected.externalPublicSaleMint(
                     zeroAddress,
                     "2",
                     {
@@ -197,6 +207,7 @@ describe("IlkelBenlik", async function () {
                 const endingDeployerBalance = await ilkelBenlik.balanceOf(
                     deployer
                 )
+                const endingAdmin1Balance = await ilkelBenlik.balanceOf(admin1)
                 assert.equal(
                     (await ilkelBenlik.balanceOf(user1)).toString(),
                     amount * 2
@@ -214,7 +225,11 @@ describe("IlkelBenlik", async function () {
                 )
                 assert.equal(
                     endingDeployerBalance.toString(),
-                    (parseInt(startingDeployerBalance) + 11).toString()
+                    (parseInt(startingDeployerBalance) + 9).toString()
+                )
+                assert.equal(
+                    endingAdmin1Balance.toString(),
+                    (parseInt(startingAdmin1Balance) + 2).toString()
                 )
             })
         })

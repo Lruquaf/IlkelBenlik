@@ -37,6 +37,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
     const founder2 = networkConfig[chainId].founder2
     const communityWallet = networkConfig[chainId].communityWallet
     const merkleRoot = rootHash
+    const adminsForExternal = networkConfig[chainId].adminsForExternal
 
     const args = [
         maxTokens,
@@ -52,6 +53,7 @@ module.exports = async ({getNamedAccounts, deployments}) => {
         founder2,
         communityWallet,
         merkleRoot,
+        adminsForExternal,
     ]
 
     console.log("Deploying token contract...")

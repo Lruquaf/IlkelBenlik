@@ -9,6 +9,8 @@ const TEST_KEY_2 = process.env.TEST_KEY_2 || "0xkey"
 const TEST_KEY_3 = process.env.TEST_KEY_3 || "0xkey"
 const TEST_KEY_4 = process.env.TEST_KEY_4 || "0xkey"
 const TEST_KEY_5 = process.env.TEST_KEY_5 || "0xkey"
+const ADMIN_1 = process.env.ADMIN_1 || "0xkey"
+const ADMIN_2 = process.env.ADMIN_2 || "0xkey"
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "https://sepolia"
 // const ETHEREUM_RPC_URL =
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "key"
@@ -55,6 +57,8 @@ module.exports = {
                 TEST_KEY_3,
                 TEST_KEY_4,
                 TEST_KEY_5,
+                ADMIN_1,
+                ADMIN_2
             ],
         },
         // mainnet: {
@@ -72,6 +76,14 @@ module.exports = {
             default: 0,
             sepolia: 0,
             mainnet: 0,
+        },
+        admin1: {
+            default: 18,
+            sepolia: 6,
+        },
+        admin1: {
+            default: 19,
+            sepolia: 7,
         },
         wl1: {
             default: 1,
