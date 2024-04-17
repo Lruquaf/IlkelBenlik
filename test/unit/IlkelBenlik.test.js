@@ -6,7 +6,7 @@ const {
 const {assert, expect} = require("chai")
 const {merkle} = require("../../utils/merkle")
 
-// !developmentChains.includes(network.name) ? describe.skip :
+!developmentChains.includes(network.name) ? describe.skip :
 describe("IlkelBenlik", async function () {
     let ilkelBenlik,
         transferProxyMock,
@@ -14,9 +14,17 @@ describe("IlkelBenlik", async function () {
         attackerConnectedContract,
         wl1ConnectedContract,
         wl2ConnectedContract,
-        user1ConnectedContract
+        user1ConnectedContract,
+        admin1ConnectedContract
     let provider
-    let deployer, attacker, wl1, wl2, user1, communityWallet, zeroAddress
+    let deployer,
+        attacker,
+        wl1,
+        wl2,
+        user1,
+        communityWallet,
+        zeroAddress,
+        admin1
     let chainId
     let closedState, whitelistState, publicState
     let publicTokenPrice, baseUri, founder2
@@ -33,6 +41,7 @@ describe("IlkelBenlik", async function () {
             (await getNamedAccounts()).wl1,
             (await getNamedAccounts()).wl2,
         ]
+        admin1 = (await getNamedAccounts()).admin1
         zeroAddress = ethers.constants.AddressZero
         provider = new ethers.providers.Web3Provider(network.provider)
         await deployments.fixture(["all"])
@@ -49,6 +58,10 @@ describe("IlkelBenlik", async function () {
         wl1ConnectedContract = await ethers.getContract("IlkelBenlik", wl1)
         wl2ConnectedContract = await ethers.getContract("IlkelBenlik", wl2)
         user1ConnectedContract = await ethers.getContract("IlkelBenlik", user1)
+        admin1ConnectedContract = await ethers.getContract(
+            "IlkelBenlik",
+            admin1
+        )
         closedState = networkConfig[chainId].state["closed"]
         whitelistState = networkConfig[chainId].state["whitelist"]
         publicState = networkConfig[chainId].state["public"]
@@ -549,14 +562,14 @@ describe("IlkelBenlik", async function () {
                 "NotWhitelistSalePhase"
             )
         })
-        it("fails if caller is not owner", async function () {
+        it("fails if caller is not an admin", async function () {
             const amount = "10"
             await expect(
                 attackerConnectedContract.externalWhitelistSaleMint(
                     deployer,
                     amount
                 )
-            ).to.be.revertedWith("Ownable: caller is not the owner")
+            ).to.be.revertedWithCustomError(ilkelBenlik, "NotAnAdmin")
         })
         it("fails if max supply for whitelist is exceeded", async function () {
             let txResponse = await ilkelBenlik.changeState(closedState)
@@ -613,10 +626,11 @@ describe("IlkelBenlik", async function () {
             )
             await txResponse.wait(1)
             const amount2 = "10"
-            txResponse = await ilkelBenlik.externalWhitelistSaleMint(
-                zeroAddress,
-                amount2
-            )
+            txResponse =
+                await admin1ConnectedContract.externalWhitelistSaleMint(
+                    zeroAddress,
+                    amount2
+                )
             await txResponse.wait(1)
             // Ideally should be 1 assert per "it"
             assert.equal(
@@ -624,8 +638,8 @@ describe("IlkelBenlik", async function () {
                 (parseInt(amount1) + 3).toString()
             )
             assert.equal(
-                (await ilkelBenlik.balanceOf(deployer)).toString(),
-                parseInt(amount2) + 4
+                (await ilkelBenlik.balanceOf(admin1)).toString(),
+                amount2
             )
             assert.equal(
                 (await ilkelBenlik.totalSupply()).toString(),
@@ -691,14 +705,14 @@ describe("IlkelBenlik", async function () {
                 ilkelBenlik.externalPublicSaleMint(zeroAddress, amount)
             ).to.be.revertedWithCustomError(ilkelBenlik, "NotPublicSalePhase")
         })
-        it("fails if caller is not owner", async function () {
+        it("fails if caller is not an admin", async function () {
             const amount = "10"
             await expect(
                 attackerConnectedContract.externalPublicSaleMint(
                     zeroAddress,
                     amount
                 )
-            ).to.be.revertedWith("Ownable: caller is not the owner")
+            ).to.be.revertedWithCustomError(ilkelBenlik, "NotAnAdmin")
         })
         it("fails if request exceeds max amount per transaction", async function () {
             const amount = "40"
@@ -758,19 +772,21 @@ describe("IlkelBenlik", async function () {
             )
         })
         it("mints the correct amount of tokens to the caller", async function () {
-            const startingTokenBalance = await ilkelBenlik.balanceOf(deployer)
-            const startingContractBalance = await ilkelBenlik.contractBalance()
+            const startingTokenBalance = await ilkelBenlik.balanceOf(admin1)
             const amount = "30"
-            let txResponse = await ilkelBenlik.externalPublicSaleMint(
-                zeroAddress,
-                amount
-            )
+            let txResponse =
+                await admin1ConnectedContract.externalPublicSaleMint(
+                    zeroAddress,
+                    amount
+                )
             await txResponse.wait(1)
-            const endingTokenBalance = await ilkelBenlik.balanceOf(deployer)
-            const endingContractBalance = await ilkelBenlik.contractBalance()
+            const endingTokenBalance = await ilkelBenlik.balanceOf(admin1)
 
             const startingUser1Balance = await ilkelBenlik.balanceOf(user1)
-            txResponse = await ilkelBenlik.externalPublicSaleMint(user1, amount)
+            txResponse = await admin1ConnectedContract.externalPublicSaleMint(
+                user1,
+                amount
+            )
             await txResponse.wait(1)
             const endingUser1Balance = await ilkelBenlik.balanceOf(user1)
             // Ideally should be 1 assert per "it"
@@ -781,7 +797,7 @@ describe("IlkelBenlik", async function () {
                 ).toString()
             )
             assert.equal(
-                (await ilkelBenlik.getPublicMintCounter(deployer)).toString(),
+                (await ilkelBenlik.getPublicMintCounter(admin1)).toString(),
                 amount
             )
 
@@ -1071,6 +1087,7 @@ describe("IlkelBenlik", async function () {
         })
     })
     describe("end-to-end", async function () {
+        // FOR TRACKING GAS OPTIMIZATION
         it("works the all process properly", async function () {
             // BEFORE-SALE
             let amount = "10"

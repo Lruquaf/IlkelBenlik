@@ -19,6 +19,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 error InvalidInput();
 error NotAnAccount();
 error NotAWhitelisted();
+error NotAnAdmin();
 error WrongStateForReveal();
 error AlreadyRevealed();
 error StillAirdropPhase();
@@ -59,6 +60,16 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
 
     // reveal state
     bool public isRevealed = false;
+
+    //////////////
+    //WIP/////////
+    //////////////
+
+    mapping(address admin => bool isAdmin) public adminsForExternal;
+
+    //////////////
+    //////////////
+    //////////////
 
     // max supply
     uint256 public immutable MAX_TOKENS;
@@ -106,7 +117,8 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
         address _founder1,
         address _founder2,
         address _communityWallet,
-        bytes32 _merkleRoot
+        bytes32 _merkleRoot,
+        address[] memory _admins
     ) ERC721A("IlkelBenlik", "IB") {
         if (_maxTokensForWhitelist + _maxTokensForAirdrop > _maxTokens) {
             revert InvalidInput();
@@ -125,6 +137,9 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
         COMMUNITY_WALLET = _communityWallet;
         MERKLE_ROOT = _merkleRoot;
         _setDefaultRoyalty(_founder2, 500);
+        for (uint256 i = 0; i < _admins.length; i++) {
+            adminsForExternal[_admins[i]] = true;
+        }
     }
 
     function supportsInterface(
@@ -151,6 +166,13 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
     modifier onlyWhitelisted(bytes32[] calldata _merkleProof) {
         if (!isWhitelisted(msg.sender, _merkleProof)) {
             revert NotAWhitelisted();
+        }
+        _;
+    }
+
+    modifier onlyAdmins() {
+        if (!adminsForExternal[msg.sender]) {
+            revert NotAnAdmin();
         }
         _;
     }
@@ -278,7 +300,7 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
     function externalWhitelistSaleMint(
         address _to,
         uint256 _amount
-    ) public onlyOwner {
+    ) public onlyAdmins {
         if (state != STATE.WHITELIST) {
             revert NotWhitelistSalePhase();
         } else if (
@@ -288,7 +310,7 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
             revert MaxSupplyForWhitelistExceeded();
         }
         if (_to == address(0)) {
-            _mint(owner(), _amount);
+            _mint(msg.sender, _amount);
         } else {
             if (
                 uint256(getWhitelistMintCounter(_to)) + _amount >
@@ -312,7 +334,7 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
     function externalPublicSaleMint(
         address _to,
         uint256 _amount
-    ) public onlyOwner {
+    ) public onlyAdmins {
         if (state != STATE.PUBLIC) {
             revert NotPublicSalePhase();
         } else if (_amount > MAX_AMOUNT_PER_MINT) {
@@ -321,7 +343,7 @@ contract IlkelBenlik is ERC721AQueryable, ERC2981, Ownable {
             revert MaxSupplyExceeded();
         }
         if (_to == address(0)) {
-            _mint(owner(), _amount);
+            _mint(msg.sender, _amount);
         } else {
             if (getPublicMintCounter(_to) + _amount > MAX_AMOUNT_PER_ACCOUNT) {
                 revert MaxAmountPerAccountExceeded();

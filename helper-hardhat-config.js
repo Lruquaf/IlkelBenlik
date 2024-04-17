@@ -22,6 +22,11 @@ const networkConfig = {
             "0x70997970C51812dc3A010C7d01b50e0d17dc79C8", // wl1
             "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", // wl2
         ],
+        adminsForExternal: [
+            "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+            "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199",
+            "0xdD2FD4581271e230360230F9337D5c0430Bf44C0",
+        ],
     },
     11155111: {
         name: "sepolia",
@@ -47,6 +52,11 @@ const networkConfig = {
         whitelist: [
             "0xA7a44587F24bcA4513A8B5D9e8320B1B297efA1c", // wl1
             "0x0d087823f0B0E6d5d7dE7eD56636763eeCB52945", // wl2
+        ],
+        adminsForExternal: [
+            "0xC85C392654B161E9a16f8f8766Db5E75620dD276",
+            "0x94cAcf639D5fE43E06585a40f67c5c9Fe94Efc00",
+            "0xa3e49a0c23DDecA9f9798A2978208136B4C51F66",
         ],
     },
     // 1: {
